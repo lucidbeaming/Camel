@@ -1,9 +1,11 @@
-#include <MozziGuts.h>
+// Mozzi 2 reads its configuration when Mozzi.h is included, so settings come first
+#define MOZZI_CONTROL_RATE 64 // powers of 2 please
+#include <Mozzi.h>
 #include <IntMap.h>
 #include <Oscil.h>
 #include <Metronome.h>
 #include <Ead.h>
-#include <LowPassFilter.h>
+#include <ResonantFilter.h>
 #include <Phasor.h>
 #include <Sample.h>
 #include <RollingAverage.h>
@@ -13,21 +15,21 @@
 #include <tables/square_no_alias_2048_int8.h>
 #include <samples/bamboo/bamboo_00_2048_int8.h>
 
-#define CONTROL_RATE 64 // powers of 2 please
 
 Metronome kMetro(25);
-Oscil <SIN2048_NUM_CELLS, AUDIO_RATE> aSin(SIN2048_DATA);
-Oscil <SIN2048_NUM_CELLS, AUDIO_RATE> aLFO(SIN2048_DATA);
-Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> aSaw(SAW2048_DATA);
-Oscil <COS2048_NUM_CELLS, AUDIO_RATE> cosModulator(COS2048_DATA);
-Oscil <SQUARE_NO_ALIAS_2048_NUM_CELLS, AUDIO_RATE> sqrModulator(SQUARE_NO_ALIAS_2048_DATA);
-Sample <BAMBOO_00_2048_NUM_CELLS, AUDIO_RATE>aSample(BAMBOO_00_2048_DATA);
-Ead envelope(CONTROL_RATE);
+Oscil <SIN2048_NUM_CELLS, MOZZI_AUDIO_RATE> aSin(SIN2048_DATA);
+Oscil <SIN2048_NUM_CELLS, MOZZI_AUDIO_RATE> aLFO(SIN2048_DATA);
+Oscil <SAW2048_NUM_CELLS, MOZZI_AUDIO_RATE> aSaw(SAW2048_DATA);
+Oscil <COS2048_NUM_CELLS, MOZZI_AUDIO_RATE> cosModulator(COS2048_DATA);
+Oscil <SQUARE_NO_ALIAS_2048_NUM_CELLS, MOZZI_AUDIO_RATE> sqrModulator(SQUARE_NO_ALIAS_2048_DATA);
+Sample <BAMBOO_00_2048_NUM_CELLS, MOZZI_AUDIO_RATE>aSample(BAMBOO_00_2048_DATA);
+Ead envelope(MOZZI_CONTROL_RATE);
 LowPassFilter lpf;
-Phasor <AUDIO_RATE> kPhase;
+Phasor <MOZZI_AUDIO_RATE> kPhase;
 RollingAverage <int, 64> kPitch;
 
 const byte kSize = 5;
+const byte resonance = 50; // filter resonance, 0-255
 const byte modulation_ratio=3; // harmonics
 const IntMap pitchMap(0,1024,40,5000);
 const IntMap modMap(0,1024,10,700);
@@ -43,7 +45,7 @@ float pFreq = 200.f;
 char wave, magnitude;
 
 void setup() {
-  startMozzi(CONTROL_RATE);
+  startMozzi();
   for (byte i=0;i<=2;i++) {
     pinMode(sw[i], INPUT_PULLUP);
   }
@@ -54,7 +56,6 @@ void setup() {
   kPhase.setFreq(pFreq);
   aLFO.setFreq(50);
   aSample.setFreq(10.24f);
-  lpf.setResonance(50);
 }
 
 void updateControl(){
@@ -62,12 +63,12 @@ void updateControl(){
   swB = digitalRead(sw[1]);
   swC = digitalRead(sw[2]);
 
-  upperA = mozziAnalogRead(pot[0]);
-  upperB = mozziAnalogRead(pot[1]);
-  upperC = mozziAnalogRead(pot[2]);
-  lowerA = mozziAnalogRead(pot[3]);
-  lowerB = mozziAnalogRead(pot[4]);
-  lowerC = mozziAnalogRead(pot[5]);
+  upperA = mozziAnalogRead<10>(pot[0]);
+  upperB = mozziAnalogRead<10>(pot[1]);
+  upperC = mozziAnalogRead<10>(pot[2]);
+  lowerA = mozziAnalogRead<10>(pot[3]);
+  lowerB = mozziAnalogRead<10>(pot[4]);
+  lowerC = mozziAnalogRead<10>(pot[5]);
 
   rollingC = kPitch.next(lowerC);
   if (upperA > 5) {
@@ -91,7 +92,7 @@ void updateControl(){
 
   if (upperC <= 1020) {
     cutoff = byteMap(upperC);
-    lpf.setCutoffFreq(cutoff);
+    lpf.setCutoffFreqAndResonance(cutoff, resonance);
     cut = true;
   } else {
     cut = false;
@@ -165,7 +166,7 @@ void updateControl(){
 
 }
 
-int updateAudio(){
+AudioOutput updateAudio(){
   
   if (swB) {
     modulation = fm_intensity * cosModulator.next();
@@ -223,7 +224,7 @@ int updateAudio(){
 
   //return (wave*magnitude)>>7;
   
-  return wave;
+  return MonoOutput::from8Bit(wave);
 }
 
 void loop() {
