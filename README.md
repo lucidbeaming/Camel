@@ -12,7 +12,7 @@ Camel is a synthesizer built into a former methamphetamine addict's stash box. I
 
 ## Requirements
 
-- An Arduino with six analog inputs, such as an Uno or Nano (the sketch compiles for both)
+- Any board Mozzi 2 supports, with six analog inputs and three spare digital pins. The sketch is board-agnostic (it compiles for the Uno and Nano, for example).
 - [Mozzi](https://github.com/sensorium/Mozzi) **2.x**. The last version for Mozzi 1.x is tagged [`mozzi-1.x`](https://github.com/lucidbeaming/Camel/tree/mozzi-1.x).
 - Six potentiometers (10 kΩ linear is typical), three on/off toggle switches, and an audio output (see [Wiring](#wiring))
 
@@ -23,9 +23,9 @@ Camel is a synthesizer built into a former methamphetamine addict's stash box. I
 | A0, A1, A2 | Upper row of knobs: wobble, phase detune, filter cutoff |
 | A3, A4, A5 | Lower row of knobs: FM depth, tempo, pitch |
 | D5, D6, D7 | Switches A, B, C, each between the pin and GND (the sketch uses the internal pull-ups) |
-| D9 | Audio out: Mozzi's default PWM output on an Uno or Nano |
+| Audio out | Mozzi's default output for your board: pin 9 on an Uno or Nano. Other boards use other pins; see [Mozzi's output modes](https://sensorium.github.io/Mozzi/). |
 
-Each pot's wiper goes to its analog pin, with the outer legs on 5 V and GND. Pin 9 outputs PWM, so it needs a simple RC low-pass filter before a jack or amplifier; the [Mozzi documentation](https://sensorium.github.io/Mozzi/) shows one.
+Each pot's wiper goes to its analog pin, with the outer legs on the board's supply (5 V or 3.3 V) and GND. On AVR boards like the Uno, the audio output is PWM, so it needs a simple RC low-pass filter before a jack or amplifier; the [Mozzi documentation](https://sensorium.github.io/Mozzi/) shows one.
 
 ## Install
 
@@ -36,7 +36,7 @@ Each pot's wiper goes to its analog pin, with the outer legs on 5 V and GND. Pin
    git clone https://github.com/lucidbeaming/Camel.git camel-sample
    ```
 
-3. Open `camel-sample/camel-sample.ino` in the Arduino IDE, select your board and upload. Or with `arduino-cli` (replace the port with yours from `arduino-cli board list`):
+3. Open `camel-sample/camel-sample.ino` in the Arduino IDE, select your board and upload. Or with `arduino-cli`, using your board's FQBN and port (both shown by `arduino-cli board list`). For an Uno:
 
    ```bash
    arduino-cli compile --fqbn arduino:avr:uno camel-sample
