@@ -2,6 +2,8 @@
 
 Arduino + Mozzi sketch for a keyless drone synthesizer.
 
+Documentation: [lucidbeaming.com/art/code/camel](https://lucidbeaming.com/art/code/camel)
+
 ![Camel: a worn Camel cigarette tin fitted with three toggle switches, three small knobs and three large white pointer knobs](https://res.cloudinary.com/lucidbeaming/image/upload/f_jpg,q_auto/c_fit,w_900/v1/lucidbeaming/soundart/camel-device)
 
 - **Video:** [Camel Synth made with Mozzi audio library for Arduino](https://www.youtube.com/watch?v=uOU8HIqG_lI)
